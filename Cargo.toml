@@ -1,0 +1,9 @@
+[package]
+name = "tpm_provisioner"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tss-esapi = "7.5.0"
+anyhow = "1.0"
+openssl = "0.10"
