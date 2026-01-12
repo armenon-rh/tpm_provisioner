@@ -39,28 +39,7 @@ sudo apt-get install -y pkg-config libssl-dev libtss2-dev
 
 ### 3. TPM Simulator (Tested with TCG TPM Simulator)
 For testing without hardware, you can use the TCG TPM Reference Implementation:
-
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/TrustedComputingGroup/TPM.git
-   cd TPM
-   ```
-
-2. **Build the Simulator:**
-   ```bash
-   mkdir -p TPMCmd/build
-   cd TPMCmd/build
-   cd TPMCmd
-   cmake -S . -B build -G "Unix Makefiles"
-   cmake --build build
-   ```
-   If the build is successful, you will find the Simulator executable in the build/Simulator/ directory.
-
-3. **Start the Simulator:**
-   ```bash
-   ./Simulator
-   ```
-The simulator defaults to port 2321, which this tool is configured to use.
+Checkout the steps [here](docs/steps_to_start_TCGTPM_simulator.md)
 
 ## Building
 
