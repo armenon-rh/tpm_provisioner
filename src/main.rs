@@ -1,3 +1,13 @@
+// SPDX-License-Identifier: LGPL-2.1-only
+// Copyright (c) 2026 Red Hat, Inc.
+
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
+)]
+
 mod tcg;
 
 use anyhow::{Context as _, Result, bail};
@@ -85,8 +95,8 @@ fn main() -> Result<()> {
 //   TPM Helper Functions
 // ============================================================================
 
-// Connects to the TCG TPM simulator and issues a startup command.
-// Returns: tss_esapi::context structure
+/// Connects to the TCG TPM simulator and issues a startup command.
+/// Returns a tss_esapi context [`Context`]
 fn connect_and_reset_tpm() -> Result<Context> {
     let tcti_conf = TctiNameConf::Mssim(NetworkTPMConfig::from_str(TPM_URI)?);
     let mut ctx = Context::new(tcti_conf)?;
@@ -96,13 +106,14 @@ fn connect_and_reset_tpm() -> Result<Context> {
     Ok(ctx)
 }
 
-// Create the endorsement key using esapi call to the TCG TPM Simulator
+/// Create the endorsement key using esapi call to the TCG TPM Simulator
+/// Returns the ek [`KeyHandle`]
 fn create_ek(context: &mut Context) -> Result<KeyHandle> {
     ek::create_ek_object(context, AsymmetricAlgorithm::Rsa, None)
         .context("Failed to create EK object")
 }
 
-// Store the certificate to non-volatile ram or NVChip state file.
+/// Store the certificate to non-volatile ram or NVChip state file.
 fn write_cert_to_nvram(context: &mut Context, cert_data: &[u8]) -> Result<()> {
     context.clear_sessions();
     context.set_sessions((Some(AuthSession::Password), None, None));
@@ -170,11 +181,20 @@ fn verify_nvram_index(context: &mut Context) -> Result<()> {
 //   Crypto & Certificate Logic
 // ============================================================================
 
-// Creates a new public key from TPM public key usig rsa, and then
-// converts it into x509_cert recognisable format.
-// This is an ASN.1 structure called SubjectPublicKeyInfoOwned that has 2 fields,
-// AlgorithmIdentifier and public key data.
+/// Converts public key from tpm format to spki x509 format.
+/// # Arguments
+///
+/// * [`Public`] - TPM esapi Public key structure
+///
+/// # Returns
+///
+/// * [`SubjectPublicKeyInfoOwned`] - spki format public key
 fn convert_tpm_public_to_spki(public: &Public) -> Result<SubjectPublicKeyInfoOwned> {
+    // Step 1: Creates a new rsa public key from TPM public part.
+    // Step 2: Converts rsa public key into x509_cert recognisable format.
+    // This is an ASN.1 structure called SubjectPublicKeyInfoOwned (spki) that has 2 fields,
+    // AlgorithmIdentifier and public key data.
+
     let modulus_bytes = match public {
         Public::Rsa { unique, .. } => unique.as_slice(),
         _ => bail!("EK is not an RSA key"),
@@ -188,7 +208,12 @@ fn convert_tpm_public_to_spki(public: &Public) -> Result<SubjectPublicKeyInfoOwn
     Ok(SubjectPublicKeyInfoOwned::try_from(der.as_bytes())?)
 }
 
-// Creates a key pair and uses it to create a CA.
+/// Creates a key pair and uses it to create a CA.
+///
+/// # Arguments
+///
+/// * [`SigningKey`] - Private signing key of CA
+/// * [`Name`] - Relative Distinguished Name
 fn generate_ca() -> Result<(SigningKey<Sha256>, Name)> {
     let mut rng = OsRng;
     let priv_key = RsaPrivateKey::new(&mut rng, 2048)?;
@@ -214,7 +239,19 @@ fn generate_ca() -> Result<(SigningKey<Sha256>, Name)> {
     Ok((signer, name))
 }
 
-// The EK is signed with the CA (name and private key) created using generate_ca()
+/// The EK is signed with the CA (name and private key) created using [`generate_ca()`]
+///
+/// # Arguments
+///
+/// * [`SubjectPublicKeyInfoOwned`] - Endorsement key
+/// * [`SigningKey`] - Signer/CA private key
+/// * [`Name`] - CA name aka Relative Distinguished Name
+///
+/// # Returns
+/// * [`Vec<u8>`] - Signed EK Cert in DER format
+///
+/// # Reference
+/// [TCG ek credential profile](https://trustedcomputinggroup.org/wp-content/uploads/TCG-EK-Credential-Profile-for-TPM-Family-2.0-Level-0-Version-2.6_pub.pdf)
 fn generate_signed_ek_cert(
     ek_spki: &SubjectPublicKeyInfoOwned,
     ca_signer: &SigningKey<Sha256>,
@@ -225,7 +262,7 @@ fn generate_signed_ek_cert(
     // Distinguished Name. However the TCG spec has only one item at each level/set.
     // Each item is a AttributeTypeAndValue structure containing AttributeType a.k.a the oid
     // defined in the tcg module and an AttributeValue which is a tagged ASN.1 value.
-    // Checkout certificate examples [https://trustedcomputinggroup.org/wp-content/uploads/TCG-EK-Credential-Profile-for-TPM-Family-2.0-Level-0-Version-2.6_pub.pdf] (TCG ek credential profile)
+    // Checkout certificate examples in the reference section
 
     let tcg_rdns = RdnSequence(vec![
         RelativeDistinguishedName(
@@ -276,7 +313,7 @@ fn generate_signed_ek_cert(
     Ok(cert.to_der()?)
 }
 
-// Writes pem data to the file
+/// Writes pem data to the file
 fn write_to_file(path: &str, data: &[u8]) -> Result<()> {
     let mut file = File::create(path)?;
     file.write_all(data)?;
