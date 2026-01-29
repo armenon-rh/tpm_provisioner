@@ -120,3 +120,23 @@ The TCG specification requires us to follow a specific format described in the T
 
 Licensed under:
 - [LGPL-2.1](./LICENSE)
+
+# Running tests
+1. Build the Image that contains necessary information to start the TCG simulator
+podman build -t tpm-provisioner -f Dockerfile
+
+2. Start a container using the image and step inside it.
+podman run -it --name tpm-lab tpm-provisioner
+
+3. Run the utility and call verify to check the CA chain.
+cargo run && verify
+
+Alternatively,
+4. Start the container directly and run commands on the command line
+podman run -it tpm-provisioner:latest /bin/bash -c "cargo run && verify"
+
+5. To copy the certificates to the host,
+podman cp <container_name>:/app/tpm_provisioner/ek_cert.pem /path/on/host/ek_cert.pem
+podman cp <container_name>:/app/tpm_provisioner/local_ca.pem /path/on/host/local_ca.pem
+
+Note that the verification will fail if you already had the files local_ca.pem and ek_cert.pem in the source directory, because it will be copied into the container in COPY step.
