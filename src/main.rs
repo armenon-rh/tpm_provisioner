@@ -11,6 +11,7 @@
 pub mod provision;
 pub mod tcg;
 pub mod crypto;
+pub mod kbs_client;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -103,7 +104,7 @@ fn main() -> Result<()> {
             output,
         } => {
             println!("Wrapping {} via {} -> {}", input_key, url, output);
-            // TODO: Implement wrapping
+            kbs_client::wrap_key(&input_key, &url, &output)?;
         }
         Commands::Unwrap {
             input_file,
@@ -111,7 +112,7 @@ fn main() -> Result<()> {
             output,
         } => {
             println!("Unwrapping {} via {} -> {}", input_file, url, output);
-            // TODO: Implement unwrapping
+            kbs_client::unwrap_key(&input_file, &url, &output)?;
         }
     }
     Ok(())
