@@ -10,6 +10,7 @@
 
 pub mod provision;
 pub mod tcg;
+pub mod crypto;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -76,8 +77,7 @@ fn main() -> Result<()> {
             out_file,
             out_key,
         } => {
-            println!("Encrypting {} -> {} (key: {})", input, out_file, out_key);
-            // TODO: Implement encryption
+            crypto::encrypt_file(&input, &out_file, &out_key)?;
         }
         Commands::Wrap {
             input_key,
