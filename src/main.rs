@@ -39,6 +39,17 @@ enum Commands {
         #[arg(long)]
         out_key: String,
     },
+    Decrypt {
+        /// Input file path
+        #[arg(short, long)]
+        in_file: String,
+        /// Output file path for encrypted data
+        #[arg(long)]
+        in_key: String,
+        /// Output file path for the DEK
+        #[arg(long)]
+        out_file: String,
+    },
     /// Wrap a key using the KBS
     Wrap {
         /// Input key file path (DEK)
@@ -78,6 +89,13 @@ fn main() -> Result<()> {
             out_key,
         } => {
             crypto::encrypt_file(&input, &out_file, &out_key)?;
+        }
+        Commands::Decrypt {
+            in_file,
+            in_key,
+            out_file,
+        } => {
+            crypto::decrypt_file(&in_file, &in_key, &out_file)?;
         }
         Commands::Wrap {
             input_key,
