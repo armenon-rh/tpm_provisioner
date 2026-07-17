@@ -6,6 +6,6 @@ sleep 1
 echo -e "Run tpm2_startup to initialize"
 tpm2_startup -c > /dev/null 2>&1
 
-echo -e "Simulator started. Running 'cargo run && verify' will check OpenSSL results."
+echo -e "Simulator started. Running 'tpm_provisioner provision && verify' will check OpenSSL results."
 
 exec "$@"

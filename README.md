@@ -134,13 +134,14 @@ podman run -it --name tpm-lab tpm-provisioner
 
 3. Run the utility and call verify to check the CA chain.
 ```bash
-cargo run && verify
+tpm_provisioner provision && verify;
 ```
 
 Alternatively,  
 4. Start the container directly and run commands on the command line
 ```bash
-podman run -it tpm-provisioner:latest /bin/bash -c "cargo run && verify"
+podman run -it tpm-provisioner:latest /bin/bash -c "tpm_provisioner
+provision && verify"
 ```
 
 5. To copy the certificates/NVChip to the host,
